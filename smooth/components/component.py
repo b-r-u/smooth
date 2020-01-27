@@ -32,6 +32,7 @@ class Component:
 
         # Emissions values for consumption and installation in [kg/Wh]
         self.variable_emissions = None
+        self.dependant_flow_emissions = None
         self.op_emissions = dict()
         self.fix_emissions = dict()
 

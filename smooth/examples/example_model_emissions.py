@@ -90,6 +90,7 @@ components.append({
     'bus_th': 'bth',
     'power_max': 500e3,
     'variable_emissions': 0.778,
+    'dependant_flow_emissions': 'flow: fuel_cell_chp_electric-->bel',
     'life_time': 20,
     'fix_emissions': {
         'key': ['free', 'spec'],

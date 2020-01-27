@@ -26,6 +26,12 @@ class FuelCellChp(Component):
         self.set_parameters(params)
 
         # INTERNAL PARAMETERS
+        # Dependant flows, which is used for the emissions update
+        # 'flow: bh2_hp-->fuel_cell_chp_electric'
+        # 'flow: bh2_hp-->fuel_cell_chp_thermal'
+        # 'flow: fuel_cell_chp_electric-->bel'
+        # 'flow: fuel_cell_chp_thermal-->bth'
+
         # Heating value of hydrogen [kWh/kg].
         self.heating_value = 33.33
 
@@ -166,9 +172,12 @@ class FuelCellChp(Component):
         Component.update_costs(self, results, sim_params, this_energy_supplied_electric)
 
     def update_var_emissions(self, results, sim_params):
-        # Get the name of the flow of this component.
-        flow_name = list(self.flows)
-        # Get the amount of electric energy supplied by the chp this interval time step [Wh].
-        this_energy_supplied_electric = self.flows[flow_name[1]][sim_params.i_interval]
+        flow_list = list(self.flows)
+        if self.dependant_flow_emissions not in flow_list:
+            raise ValueError('"{}" is no flow of this component:\n {}'.format(self.dependant_flow_emissions, flow_list))
+
+        # Get the amount of a specific flow supplied by the chp this interval time step.
+        this_energy_flow = self.flows[self.dependant_flow_emissions][sim_params.i_interval]
         # Call the function of the mother component to save emissions for this run.
-        Component.update_var_emissions(self, results, sim_params, this_energy_supplied_electric)
+        Component.update_var_emissions(self, results, sim_params, this_energy_flow)
+
