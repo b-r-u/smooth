@@ -1,15 +1,14 @@
 # With this optimization tool, attributes of a smooth component can be optimized. For the optimization, a genetic
 # algorithm (based on the DEAP package) is used.
-
 import random
 import numpy as np
 import multiprocessing
 import copy
 import math
+import matplotlib.pyplot as plt
 from smooth.optimization.optimization_parameters import OptimizationParameters
 from smooth import run_smooth
 from deap import base, creator, tools
-
 
 # Define if you want to save all smooth results of each individual evaluated. This can lead to big result files, in a
 # test run, the results of 100 individuals was ~500 MB, while the result file with only the smooth result saved for the
@@ -52,6 +51,12 @@ def fitness_function(_i_individual, _individual, model, opt_params):
         for this_comp in smooth_result:
             annuity_tot += this_comp.results['annuity_total']
 
+        # ToDo: check how Timo named the total emission per year. Then change annuity_opex with it !!
+        # As another fitness value, give back the summed up total emissions (which will be minimized) [CO2/a].
+        emissions_tot = 0
+        for this_comp in smooth_result:
+            emissions_tot += this_comp.results['annuity_opex']
+
     except:
         # The smooth run failed. Therefore the fitness value is set to infinity.
         # ToDo: Check if setting the fitness value to infinity is a good way to handle bad individuals. Maybe this could
@@ -59,11 +64,12 @@ def fitness_function(_i_individual, _individual, model, opt_params):
         print('------------------------------------------------------------------------------------Evaluation canceled')
         # Case: Smooth couldn't run through, thus a bad fitness value has to be assigned.
         annuity_tot = float('inf')
+        emissions_tot = float('inf')
         smooth_result = None
 
     # For the DEAP package, the fitness value needs to be a tuple, thus the comma.
     _individual.fitness.valid = True
-    _individual.fitness.values = annuity_tot,
+    _individual.fitness.values = annuity_tot, emissions_tot
     _individual.smooth_result = smooth_result
     _individual.attribute_variation = opt_params.attribute_var
     return [_i_individual, _individual]
@@ -121,13 +127,13 @@ class TrackIndividuals:
 
             # Then save the individual as an individual evaluated. If not all smooth results are supposed to be saved,
             # delete the smooth result first (this drastically reduces the size of the result file).
+
             if not save_all_smooth_results:
                 individual.smooth_result = None
 
             # Add the individual to the list of evaluated individuals.
             self.individuals_evaluated[int_val] = IndividualShadow(
                 individual.gen, individual.fitness.values, individual.smooth_result, individual.attribute_variation)
-
 
     def get_int(self, gen):
         # Calculate an integer by a given list of binary values.
@@ -195,7 +201,6 @@ def compute_fitness_values(_population, model, opt_params):
         print('Callback error at parallel computing! The error message is: ')
         print(err_msg)
 
-
     # Generate a result object that will catch the results of the function evaluation.
     individuals_evaluated = GenerationEvaluationResult(len(_population))
     # Generate a pool for using multiple cores.
@@ -227,7 +232,7 @@ def run_optimization(opt_config, _model):
     opt_params.set_params(opt_config)
 
     # Set up a minimization problem.
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -1.0))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     tbx = base.Toolbox()
 
@@ -258,6 +263,7 @@ def run_optimization(opt_config, _model):
     track_individuals = TrackIndividuals()
 
     def set_fitness(_population):
+
         # Evaluate each individual of a population.
         # Parameter:
         #  population: List of individuals [list].
@@ -297,8 +303,9 @@ def run_optimization(opt_config, _model):
 
     # Compute the fitness values for the initial population.
     set_fitness(population)
+
     # If no evaluation was successful, throw an error.
-    if track_individuals.best_fit_val == (float('inf'),):
+    if track_individuals.best_fit_val == (float('inf'), float('inf')):
         raise ValueError('No evaluation of the initial population was successful!')
 
     # globals,
@@ -339,7 +346,7 @@ def run_optimization(opt_config, _model):
         # set fitness on individuals in the population,
         stats.append(
             pull_stats(population, iteration))
-
+        # ToDo check if the best values are necessary for two objectives
         # Print optimization progress info.
         try:
             print('Iteration {} finished. Best fit. val: {} Avg. fit. val: {}'.format(
@@ -348,6 +355,14 @@ def run_optimization(opt_config, _model):
             # There are cases, when the average stat is infinity, therefor the floor command is failing.
             print('Iteration {} finished. Best fit. val: {} Avg. fit. val: {}'.format(
                 iteration, stats[-1]['min'], stats[-1]['mu']))
+        len_pop = 0
+        while len_pop < len(population):
+            plt.plot([math.floor(population[len_pop].fitness.values[0])], [math.floor(population[len_pop].fitness.values[1])], 'ro')
+            len_pop = len_pop + 1
+        plt.title('pareto front')
+        plt.xlabel('objective 1')
+        plt.ylabel('objective 2')
+        plt.pause(0.05)
 
         iteration += 1
 
@@ -363,5 +378,6 @@ def run_optimization(opt_config, _model):
 
     # Save the stats in the output.
     track_individuals.set_stats(stats)
+    plt.show()
 
     return track_individuals
