@@ -1,11 +1,3 @@
-<<<<<<< Updated upstream
-matplotlib
-seaborn
-pandas
-numpy
-deap
-oemof
-=======
 pandas
 bokeh
 feedinlib
@@ -17,4 +9,3 @@ install_requires=[
     'deap',
     'oemof'
 }
->>>>>>> Stashed changes

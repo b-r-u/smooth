@@ -42,9 +42,3 @@ class Ch4Grid (Component):
         this_ch4_supplied = self.flows[flow_name[0]][sim_params.i_interval]
         # Call the function of the mother component to save costs and art. costs for this run.
         Component.update_costs(self, results, sim_params, this_ch4_supplied)
-
-
-
-
-
-
