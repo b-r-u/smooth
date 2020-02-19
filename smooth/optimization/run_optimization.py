@@ -46,16 +46,15 @@ def fitness_function(_i_individual, _individual, model, opt_params):
     # Now that the model is updated according to the genes given by the GA, smooth can be run.
     try:
         smooth_result = run_smooth(this_model)
-        # As a fitness value, give back the summed up total annuity (which will be minimized) [EUR/a].
+        # As a fitness values, give back the summed up values
+        # e. g. of total annuity [EUR/a] or total emissions [kg/a](which will be minimized).
         objective1 = 0
         for this_comp in smooth_result:
-            objective1 += this_comp.results['annuity_total']
+            objective1 += this_comp.results[opt_params.objectives[0]]
 
-        # ToDo: check how Timo named the total emission per year. Then change annuity_opex with it !!
-        # As another fitness value, give back the summed up total emissions (which will be minimized) [CO2/a].
         objective2 = 0
         for this_comp in smooth_result:
-            objective2 += this_comp.results['annuity_opex']
+            objective2 += this_comp.results[opt_params.objectives[1]]
 
     except:
         # The smooth run failed. Therefore the fitness value is set to infinity.

@@ -18,6 +18,8 @@ def main():
         'n_generation': 4,
         'n_core': 'max'
     }
+    # Objectives
+    opt_params['objectives'] = ['annuity_total', 'annuity_opex']
     # Define the attribute variation information that will be used by the genetic algorithm.
     #  comp_name: Name of the component [string].
     #  comp_attribute: Name of the attribute to be varied [string].

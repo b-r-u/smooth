@@ -10,6 +10,8 @@ class OptimizationParameters:
         self.ga_params = GaParameters()
         # Parameters defining how to vary the model attributes.
         self.attribute_var = []
+        # Objectives
+        self.objectives = []
 
         # PARAMETERS INTERNAL
         # Number of gens in total [-]
@@ -25,6 +27,8 @@ class OptimizationParameters:
             self.attribute_var.append(AttributeVariation())
             self.attribute_var[-1].set_params(this_attribute)
             self.n_gen_total += self.attribute_var[-1].n_gen
+        # Update the objectives.
+        self.objectives = opt_config['objectives']
 
     def get_attribute_values(self, gen):
         # Get the values from one gen configuration.
