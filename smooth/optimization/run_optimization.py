@@ -47,15 +47,15 @@ def fitness_function(_i_individual, _individual, model, opt_params):
     try:
         smooth_result = run_smooth(this_model)
         # As a fitness value, give back the summed up total annuity (which will be minimized) [EUR/a].
-        annuity_tot = 0
+        objective1 = 0
         for this_comp in smooth_result:
-            annuity_tot += this_comp.results['annuity_total']
+            objective1 += this_comp.results['annuity_total']
 
         # ToDo: check how Timo named the total emission per year. Then change annuity_opex with it !!
         # As another fitness value, give back the summed up total emissions (which will be minimized) [CO2/a].
-        emissions_tot = 0
+        objective2 = 0
         for this_comp in smooth_result:
-            emissions_tot += this_comp.results['annuity_opex']
+            objective2 += this_comp.results['annuity_opex']
 
     except:
         # The smooth run failed. Therefore the fitness value is set to infinity.
@@ -63,13 +63,13 @@ def fitness_function(_i_individual, _individual, model, opt_params):
         # ToDo: be handled in a way where the genetic algorithm can extract information out of the failed result.
         print('------------------------------------------------------------------------------------Evaluation canceled')
         # Case: Smooth couldn't run through, thus a bad fitness value has to be assigned.
-        annuity_tot = float('inf')
-        emissions_tot = float('inf')
+        objective1 = float('inf')
+        objective2 = float('inf')
         smooth_result = None
 
     # For the DEAP package, the fitness value needs to be a tuple, thus the comma.
     _individual.fitness.valid = True
-    _individual.fitness.values = annuity_tot, emissions_tot
+    _individual.fitness.values = objective1, objective2
     _individual.smooth_result = smooth_result
     _individual.attribute_variation = opt_params.attribute_var
     return [_i_individual, _individual]
